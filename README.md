@@ -26,20 +26,21 @@ This repository includes the complete analytical workflow performed in **R**, fo
 Rkive-MacroTec-Analysis/
 │
 ├── data/
-│ ├── bills_data(in).csv
-│ ├── Invoice_Line_Items(in).csv
-│ ├── state_retail_yy.csv
-│ ├── cu-region-1-year-average-2023.xlsx
+│   ├── bills_data(in).csv
+│   ├── Invoice_Line_Items(in).csv
+│   ├── state_retail_yy.csv
+│   ├── cu-region-1-year-average-2023.xlsx
 │
 ├── code/
-│ ├── EDA_rkive.R
-│ ├── encrypt_R_data.R
-│ ├── ANALYTIQ_MACROTECSYSTEM_Analysis.Rmd
+│   ├── EDA_rkive.R
+│   ├── encrypt_R_data.R
+│   ├── ANALYTIQ_MACROTECSYSTEM_Analysis.Rmd
 │
 ├── report/
-│ ├── ANALYTIQ_MACROTECSYSTEM_Report.docx
+│   ├── ANALYTIQ_MACROTECSYSTEM_Report.docx
 │
 └── README.md
+
 
 **Note:** Data files include synthetic or anonymized information for academic purposes.
 
@@ -98,30 +99,12 @@ Integrating **Consumer Price Index (CPI)** and retail inflation data to examine:
 All visuals are generated using **ggplot2** with a clean, business-oriented design.
 
 ---
-
-## 📊 **Reproducible R Markdown Report**
-The full analysis is available in:
-
-`code/ANALYTIQ_MACROTECSYSTEM_Analysis.Rmd`
-
-This includes:
-- Data import  
-- Cleaning & wrangling  
-- Feature engineering  
-- Visualizations  
-- Interpretations  
-- Insights & recommendations  
-
 ---
 
-## 📝 **Final Deliverables**
-- 📄 **Capstone Written Report**  
-- 📊 **Visualizations**  
-- 🧮 **R Scripts & Analysis**  
-- 🗃️ **Clean Data Files**  
-- 🛡️ **Encryption Workflow**
+## 🎨 Presentation 
+View the visual slide deck on Canva:  
+👉 **https://www.canva.com/design/DAG3HNmVZwg/ZQdXp0YuHHTZ23XQb-tHSQ/edit?utm_content=DAG3HNmVZwg&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton**
 
-All included in this repository for transparency and reproducibility.
 ---
 
 ## 🎯 **Purpose of This Repository**
