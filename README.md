@@ -26,18 +26,18 @@ This repository includes the complete analytical workflow performed in **R**, fo
 Rkive-MacroTec-Analysis/
 │
 ├── data/
-│   ├── bills_data(in).csv
-│   ├── Invoice_Line_Items(in).csv
-│   ├── state_retail_yy.csv
-│   ├── cu-region-1-year-average-2023.xlsx
+│ ├── bills_data(in).csv
+│ ├── Invoice_Line_Items(in).csv
+│ ├── state_retail_yy.csv
+│ ├── cu-region-1-year-average-2023.xlsx
 │
 ├── code/
-│   ├── EDA_rkive.R
-│   ├── encrypt_R_data.R
-│   ├── ANALYTIQ_MACROTECSYSTEM_Analysis.Rmd
+│ ├── EDA_rkive.R
+│ ├── encrypt_R_data.R
+│ ├── ANALYTIQ_MACROTECSYSTEM_Analysis.Rmd
 │
 ├── report/
-│   ├── ANALYTIQ_MACROTECSYSTEM_Report.docx
+│ ├── ANALYTIQ_MACROTECSYSTEM_Report.docx
 │
 └── README.md
 
