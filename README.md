@@ -22,7 +22,7 @@ This repository includes the complete analytical workflow performed in **R**, fo
 ---
 
 ## 🗂️ **Repository Structure**
-
+```
 Rkive-MacroTec-Analysis/
 │
 ├── data/
@@ -40,7 +40,7 @@ Rkive-MacroTec-Analysis/
 │ ├── ANALYTIQ_MACROTECSYSTEM_Report.docx
 │
 └── README.md
-
+```
 
 **Note:** Data files include synthetic or anonymized information for academic purposes.
 
