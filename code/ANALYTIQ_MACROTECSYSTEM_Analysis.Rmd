@@ -1,0 +1,219 @@
+---
+title: "Macro Tec Systems Inc. – Rkive Regional Deployment and Ethical Data Analysis"
+author: |
+  Aybüke Yıldız Olmez  
+  Venkat Ashish Yarlagadda  
+  Reeta Bai
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  word_document:
+    toc: true
+    toc_depth: 2
+---
+
+# 1) Ethical Data & Privacy 
+
+- We align our process with **GDPR Art. 25 & 32**, **ISO/IEC 27001 & 27701**, and **NIST 800‑53**.  
+- We emphasize **informed consent**, **data minimization**, **anonymization/pseudonymization**, and **secure key management**.  
+- Action item from feedback: *“Also inquire what current data-protection strategies are employed by Macro Tec for their Rkive app.”* We will document encryption-at-rest/in-transit, access controls, and consent workflows already in place.  
+- All analysis here uses **non‑PII, aggregated or simulated** data and is conducted in a **version‑controlled** environment.
+
+# 2) Libraries
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(readr)
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(forcats)
+library(here)
+```
+
+# 3) Rkive Brand Palette
+
+```{r palette}
+rkive_soft <- list(
+  deep_denim = "#1B2B44",
+  soft_blue  = "#4A8FE7",
+  sky_blue   = "#7EB6F6",
+  cool_gray  = "#CBD5E1",
+  slate_gray = "#8FA1B3",
+  white      = "#FFFFFF"
+)
+
+rkive_region_cols <- c(
+  "Northeast" = rkive_soft$soft_blue,
+  "South"     = rkive_soft$sky_blue,
+  "Midwest"   = rkive_soft$slate_gray,
+  "West"      = rkive_soft$cool_gray
+)
+
+
+
+# Minimal theme that respects Word output
+theme_rkive <- function(base_size = 12){
+  ggplot2::theme_minimal(base_size = base_size) +
+    ggplot2::theme(
+      panel.grid.major = element_line(colour = rkive_soft$mist_gray, linewidth = 0.35),
+      panel.grid.minor = element_blank(),
+      plot.title       = element_text(face="bold", colour = rkive_soft$soft_blue),
+      legend.position  = "bottom",
+      legend.title     = element_blank()
+    )
+}
+```
+
+# 4) Inputs 
+
+```{r inputs}
+library(here)
+
+# Set project root to this file’s folder
+here::i_am("Rkive_Final_Report.Rmd")
+
+# Define file paths
+state_csv_path <- here::here("state_retail_yy.csv")
+cex_xlsx_path  <- here::here("cu-region-1-year-average-2023.xlsx")
+
+# Confirm both files exist
+if (!file.exists(state_csv_path) | !file.exists(cex_xlsx_path)) {
+  message("⚠️ One or both data files not found. Please check the folder path or file names.")
+  message("Expected files:")
+  message(" - ", state_csv_path)
+  message(" - ", cex_xlsx_path)
+  stop("Required data files are missing.")
+} else {
+  cat("✅ Found both input files.\n")
+  cat("State CSV path: ", state_csv_path, "\n")
+  cat("CEX XLSX path: ", cex_xlsx_path, "\n")
+}
+
+```
+
+# 5) STATE RETAIL GROWTH DATA  (Census MSRS) — *Original flow preserved*
+
+```{r state-data}
+# Read the monthly state retail data
+state_sales <- read_csv(state_csv_path, show_col_types = FALSE)
+
+# Clean and aggregate (kept same logic/steps)
+state_clean <- state_sales %>%
+  filter(naics %in% c("445", "452")) %>%   # 445 = Grocery; 452 = General Merchandise
+  mutate(across(starts_with("yy"), ~ suppressWarnings(as.numeric(.)))) %>%
+  rowwise() %>%
+  mutate(avg_growth = mean(c_across(starts_with("yy")), na.rm = TRUE)) %>%
+  ungroup() %>%
+  group_by(stateabbr) %>%
+  summarise(retail_growth = mean(avg_growth, na.rm = TRUE), .groups="drop")
+
+head(state_clean)
+```
+
+# 6) REGIONAL CONSUMER EXPENDITURE DATA (CEX 2023) — *Original flow preserved*
+
+```{r cex}
+# Read CEX region-of-residence table
+cex <- read_excel(cex_xlsx_path, sheet = "Table 1800", skip = 2)
+
+# Clean column names
+names(cex) <- names(cex) %>%
+  str_replace_all("\\s+", " ") %>%
+  str_replace_all("\n", " ") %>%
+  str_trim()
+
+# Convert text numbers to numeric
+cex <- cex %>%
+  mutate(across(-Item, ~ suppressWarnings(as.numeric(gsub("[^0-9.]", "", .)))))
+
+# Find the numeric "mean" rows right after key categories
+anchors <- c(
+  which(str_detect(cex$Item, regex("^Food at home$", ignore_case = TRUE))),
+  which(str_detect(cex$Item, regex("^Housekeeping supplies$", ignore_case = TRUE))),
+  which(str_detect(cex$Item, regex("^Personal care products and services$", ignore_case = TRUE))),
+  which(str_detect(cex$Item, regex("^Apparel and services$", ignore_case = TRUE)))
+)
+
+# Values are in the next rows after each anchor
+value_rows <- anchors + 1
+value_rows <- value_rows[value_rows <= nrow(cex)]  # guard
+cex_values <- cex[value_rows, ]
+
+# Summarize regional spending
+cex_summary <- cex_values %>%
+  pivot_longer(cols = -Item, names_to = "Region", values_to = "Spend") %>%
+  group_by(Region) %>%
+  summarise(Total_Spend = sum(Spend, na.rm = TRUE), .groups = "drop") %>%
+  arrange(desc(Total_Spend))
+
+cex_summary
+```
+
+# 7) MERGE: STATE GROWTH × REGIONAL SPENDING — *Original flow preserved*
+
+```{r merge}
+# Map U.S. states to Census regions
+state_region_map <- data.frame(
+  stateabbr = state.abb,
+  Region = state.region
+)
+
+state_combined <- state_clean %>%
+  left_join(state_region_map, by = "stateabbr") %>%
+  left_join(cex_summary, by = "Region") %>%
+  filter(!is.na(Total_Spend)) %>%
+  mutate(
+    retail_growth   = replace_na(retail_growth, 0),
+    # keep original idea but ensure numeric scaling
+    Composite_Index = as.numeric(scale(retail_growth)) + as.numeric(scale(Total_Spend))
+  )
+```
+
+# 8) Final Clean-up — *Original flow preserved*
+
+```{r final-clean}
+state_final <- state_combined %>%
+  filter(
+    !stateabbr %in% c("DC", "USA", "TOTAL", "PR", "GU", "VI"),
+    Composite_Index < 3
+  ) %>%
+  tidyr::drop_na(Composite_Index)
+
+nrow(state_final)
+```
+
+# 9) Visualization — **Soft Rkive colors**
+
+```{r plot, fig.width=9, fig.height=6}
+p <- ggplot(state_final,
+            aes(x = forcats::fct_reorder(stateabbr, Composite_Index),
+                y = Composite_Index,
+                fill = Region)) +
+  geom_col(color = rkive_soft$white, width = 0.8) +
+  geom_text(aes(label = round(Composite_Index, 2)),
+            hjust = -0.1, size = 3.3, color = "#1A1A1A") +
+  coord_flip(clip = "off") +
+  labs(
+    title = "Rkive Deployment Opportunity by State",
+    subtitle = "Normalized composite of retail growth and household spending (2023)",
+    x = "State",
+    y = "Composite Opportunity Index"
+  ) +
+  scale_fill_manual(values = rkive_region_cols, drop = FALSE) +
+  theme_rkive() +
+  expand_limits(y = max(state_final$Composite_Index, na.rm = TRUE) * 1.1)
+
+p
+
+```
+
+# 10) Outputs
+
+```{r outputs}
+cat("Regional Spending Summary (CEX):\n")
+print(cex_summary)
+
+cat("\nTop 10 States by Combined Opportunity Index:\n")
+print(state_combined %>% arrange(desc(Composite_Index)) %>% head(10))
+```
